@@ -1,11 +1,13 @@
 package com.example.challenge.controller;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,35 +50,112 @@ public class IncidentController {
         }
     }
 
-
-
     /**
-     * GET /incidents - Lista simples com filtros opcionais
+     * GET /incidents - Lista paginada com filtros e ordenação
+     * Parâmetros: status, priority, q (busca em título/descrição), page, size, sort=campo,asc|desc
      */
     @GetMapping
-    public ResponseEntity<List<Incident>> getAllIncidents(
+    public ResponseEntity<Page<Incident>> getAllIncidents(
             @RequestParam(required = false) Status status,
             @RequestParam(required = false) IncidentPriority priority,
-            @RequestParam(required = false) String q) {
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
         
         try {
-            List<Incident> incidents;
+            // Processar parâmetros de ordenação
+            Pageable pageable = createPageable(page, size, sort);
             
-            if (status != null) {
-                incidents = incidentRepository.findByStatus(status);
-            } else if (priority != null) {
-                incidents = incidentRepository.findByPriority(priority);
-            } else if (q != null && !q.trim().isEmpty()) {
-                incidents = incidentRepository.findByTitleContainingIgnoreCase(q);
-            } else {
-                incidents = incidentRepository.findAll();
-            }
+            // Usar lógica de busca condicional baseada nos parâmetros
+            Page<Incident> incidents = searchIncidents(status, priority, q, pageable);
             
             return ResponseEntity.ok(incidents);
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+    
+    /**
+     * Método auxiliar para criar Pageable com ordenação customizada
+     */
+    private Pageable createPageable(int page, int size, String sort) {
+        try {
+            String[] sortParams = sort.split(",");
+            String field = sortParams[0];
+            String direction = sortParams.length > 1 ? sortParams[1] : "asc";
+            
+            Sort.Direction sortDirection = "desc".equalsIgnoreCase(direction) 
+                ? Sort.Direction.DESC 
+                : Sort.Direction.ASC;
+            
+            return PageRequest.of(page, size, Sort.by(sortDirection, field));
+            
+        } catch (Exception e) {
+            // Em caso de erro na ordenação, usar padrão
+            return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        }
+    }
+
+    /**
+     * Método auxiliar para busca condicional baseada nos filtros
+     */
+    private Page<Incident> searchIncidents(Status status, IncidentPriority priority, String q, Pageable pageable) {
+        // Se não há filtros, retorna todos
+        if (status == null && priority == null && (q == null || q.trim().isEmpty())) {
+            return incidentRepository.findAll(pageable);
+        }
+        
+        // Se há termo de busca, fazemos busca em título e descrição
+        boolean hasSearchTerm = q != null && !q.trim().isEmpty();
+        
+        // Combinações de filtros
+        if (status != null && priority != null && hasSearchTerm) {
+            // Buscar em título e descrição separadamente e combinar resultados
+            Page<Incident> titleResults = incidentRepository.findByStatusAndPriorityAndTitleContainingIgnoreCase(
+                status, priority, q, pageable);
+            
+            // Se título trouxe resultados suficientes, retorna
+            if (titleResults.hasContent()) {
+                return titleResults;
+            }
+            
+            // Senão, busca na descrição
+            return incidentRepository.findByStatusAndPriorityAndDescriptionContainingIgnoreCase(
+                status, priority, q, pageable);
+                
+        } else if (status != null && hasSearchTerm) {
+            // Status + busca de texto
+            Page<Incident> titleResults = incidentRepository.findByStatusAndTitleContainingIgnoreCase(status, q, pageable);
+            if (titleResults.hasContent()) {
+                return titleResults;
+            }
+            return incidentRepository.findByStatusAndDescriptionContainingIgnoreCase(status, q, pageable);
+            
+        } else if (priority != null && hasSearchTerm) {
+            // Priority + busca de texto
+            Page<Incident> titleResults = incidentRepository.findByPriorityAndTitleContainingIgnoreCase(priority, q, pageable);
+            if (titleResults.hasContent()) {
+                return titleResults;
+            }
+            return incidentRepository.findByPriorityAndDescriptionContainingIgnoreCase(priority, q, pageable);
+            
+        } else if (hasSearchTerm) {
+            // Apenas busca de texto
+            return incidentRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
+            
+        } else if (status != null) {
+            // Apenas status
+            return incidentRepository.findByStatus(status, pageable);
+            
+        } else if (priority != null) {
+            // Apenas priority
+            return incidentRepository.findByPriority(priority, pageable);
+        }
+        
+        // Fallback - todos os incidents
+        return incidentRepository.findAll(pageable);
     }
 
     /**
