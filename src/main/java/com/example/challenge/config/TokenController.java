@@ -2,8 +2,8 @@ package com.example.challenge.config;
 
 import java.time.Instant;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -33,11 +33,12 @@ public class TokenController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
        var user = userRepository.findByUsername(loginRequest.username());
 
        if (user.isEmpty() || !user.get().isLoginCorrect(loginRequest, passwordEncoder)) {
-        throw new BadCredentialsException("Invalid username or password");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Invalid username or password");
        }
 
        var now = Instant.now();
