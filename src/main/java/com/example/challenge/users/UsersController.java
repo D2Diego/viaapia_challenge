@@ -1,9 +1,12 @@
 package com.example.challenge.users;
 
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,25 +25,33 @@ public class UsersController {
         this.usersRepository = usersRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
     @Transactional
     @PostMapping("/users")
     public ResponseEntity<String> newUser(@RequestBody CreateUserDto dto) {
 
-    var userFromDb = usersRepository.findByUsername(dto.username());
+        var userFromDb = usersRepository.findByUsername(dto.username());
 
-    if (userFromDb.isPresent()) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body("Username already exists");
+        if (userFromDb.isPresent()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body("Username already exists");
+        }
+
+        var user = new User();
+        user.setUsername(dto.username());
+        user.setPassword(passwordEncoder.encode(dto.password()));
+
+        usersRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("User created successfully");
     }
 
-    var user = new Users();
-    user.setUsername(dto.username());
-    user.setPassword(passwordEncoder.encode(dto.password()));
-
-    usersRepository.save(user);
-
-    return ResponseEntity.status(HttpStatus.CREATED)
-            .body("User created successfully");
-}
+    @GetMapping("/users")
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    public ResponseEntity<List<User>> listUsers() {
+        var users = usersRepository.findAll();
+        return ResponseEntity.ok(users);
+    }
 
 }

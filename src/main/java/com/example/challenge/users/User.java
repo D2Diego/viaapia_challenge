@@ -1,18 +1,16 @@
 package com.example.challenge.users;
 
+import jakarta.persistence.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.challenge.config.dto.LoginRequest;
+import com.example.challenge.role.Role;
+
+import java.util.Set;
 import java.util.UUID;
 
-
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import com.example.challenge.config.dto.LoginRequest;
-
-import jakarta.persistence.*;
-
-
 @Entity
-@Table(name = "users")
-public class Users {
+@Table(name = "tb_users")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -21,9 +19,15 @@ public class Users {
 
     @Column(unique = true)
     private String username;
-
-    @Column(unique = false)
     private String password;
+
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "tb_users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles;
 
 
     public UUID getUserId() {
@@ -50,8 +54,15 @@ public class Users {
         this.password = password;
     }
 
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
+
     public boolean isLoginCorrect(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
         return passwordEncoder.matches(loginRequest.password(), this.password);
     }
-
 }
