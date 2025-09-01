@@ -4,21 +4,22 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.challenge.role.Role;
-import com.example.challenge.users.User;
-import com.example.challenge.role.RoleRepository;
-import com.example.challenge.users.UsersRepository;
+
+import com.example.challenge.entity.Role;
+import com.example.challenge.entity.User;
+import com.example.challenge.repository.RoleRepository;
+import com.example.challenge.repository.UsersRepository;
 
 import java.util.Set;
 
 @Configuration
-public class AdminUserConfig implements CommandLineRunner {
+public class DataSeedConfig implements CommandLineRunner {
 
     private RoleRepository roleRepository;
     private UsersRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
 
-    public AdminUserConfig(RoleRepository roleRepository,
+    public DataSeedConfig(RoleRepository roleRepository,
                            UsersRepository userRepository,
                            BCryptPasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;

@@ -1,4 +1,4 @@
-package com.example.challenge.comment;
+package com.example.challenge.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

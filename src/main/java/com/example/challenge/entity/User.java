@@ -1,9 +1,9 @@
-package com.example.challenge.users;
+package com.example.challenge.entity;
 
 import jakarta.persistence.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import com.example.challenge.config.dto.LoginRequest;
-import com.example.challenge.role.Role;
+
+import com.example.challenge.dto.request.LoginRequest;
 
 import java.util.Set;
 import java.util.UUID;

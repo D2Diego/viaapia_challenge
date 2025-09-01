@@ -1,4 +1,4 @@
-package com.example.challenge.users.dto;
+package com.example.challenge.dto.request;
 
 public record CreateUserDto(String username, String password) {
 

@@ -1,4 +1,4 @@
-package com.example.challenge.config;
+package com.example.challenge.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,10 +9,11 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import com.example.challenge.config.dto.LoginRequest;
-import com.example.challenge.config.dto.LoginResponse;
-import com.example.challenge.role.Role;
-import com.example.challenge.users.UsersRepository;
+
+import com.example.challenge.dto.request.LoginRequest;
+import com.example.challenge.dto.response.LoginResponse;
+import com.example.challenge.entity.Role;
+import com.example.challenge.repository.UsersRepository;
 
 import java.time.Instant;
 import java.util.stream.Collectors;

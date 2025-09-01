@@ -1,4 +1,4 @@
-package com.example.challenge.incedent;
+package com.example.challenge.controller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +10,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.challenge.entity.Incident;
+import com.example.challenge.entity.IncidentPriority;
+import com.example.challenge.entity.Status;
+import com.example.challenge.repository.IncidentRepository;
 
 @RestController
 @RequestMapping("/api/stats")
@@ -77,7 +82,7 @@ public class StatsController {
             
             // Agregar por prioridade
             Map<String, Long> priorityCounts = new HashMap<>();
-            for (Priority priority : Priority.values()) {
+            for (IncidentPriority priority : IncidentPriority.values()) {
                 long count = allIncidents.stream()
                     .filter(incident -> incident.getPriority() == priority)
                     .count();

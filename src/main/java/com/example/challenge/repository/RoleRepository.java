@@ -1,8 +1,9 @@
-package com.example.challenge.role;
+package com.example.challenge.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.example.challenge.entity.Role;
 
 import java.util.UUID;
 

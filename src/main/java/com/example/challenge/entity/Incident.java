@@ -1,4 +1,4 @@
-package com.example.challenge.incedent;
+package com.example.challenge.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -29,7 +29,7 @@ public class Incident {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Priority priority;
+    private IncidentPriority priority;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -56,7 +56,7 @@ public class Incident {
 
     public Incident() {}
 
-    public Incident(String title, String description, Priority priority, Status status, String responsibleEmail) {
+    public Incident(String title, String description, IncidentPriority priority, Status status, String responsibleEmail) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -88,11 +88,11 @@ public class Incident {
         this.description = description;
     }
 
-    public Priority getPriority() {
+    public IncidentPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(Priority priority) {
+    public void setPriority(IncidentPriority priority) {
         this.priority = priority;
     }
 

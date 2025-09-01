@@ -1,4 +1,4 @@
-package com.example.challenge.role;
+package com.example.challenge.entity;
 
 import jakarta.persistence.*;
 

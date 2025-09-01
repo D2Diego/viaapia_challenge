@@ -1,4 +1,4 @@
-package com.example.challenge.users;
+package com.example.challenge.controller;
 
 import java.util.List;
 
@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.challenge.users.dto.CreateUserDto;
+import com.example.challenge.dto.request.CreateUserDto;
+import com.example.challenge.entity.User;
+import com.example.challenge.repository.UsersRepository;
 
 import jakarta.transaction.Transactional;
 

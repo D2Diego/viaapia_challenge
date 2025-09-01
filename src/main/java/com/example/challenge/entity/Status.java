@@ -1,4 +1,4 @@
-package com.example.challenge.incedent;
+package com.example.challenge.entity;
 
 public enum Status {
     OPEN,
