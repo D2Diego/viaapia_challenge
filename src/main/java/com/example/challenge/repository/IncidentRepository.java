@@ -15,21 +15,17 @@ import com.example.challenge.entity.Status;
 @Repository
 public interface IncidentRepository extends JpaRepository<Incident, UUID> {
     
-    // Métodos simples usando Spring Data JPA
     List<Incident> findByStatus(Status status);
     List<Incident> findByPriority(IncidentPriority priority);
     List<Incident> findByTitleContainingIgnoreCase(String title);
     List<Incident> findByDescriptionContainingIgnoreCase(String description);
     
-    // Métodos com paginação
     Page<Incident> findByStatus(Status status, Pageable pageable);
     Page<Incident> findByPriority(IncidentPriority priority, Pageable pageable);
     
-    // Busca em título OU descrição com paginação - usando Spring Data JPA method naming
     Page<Incident> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
         String titleSearch, String descriptionSearch, Pageable pageable);
     
-    // Métodos para busca combinada usando Spring Data JPA method naming
     Page<Incident> findByStatusAndPriorityAndTitleContainingIgnoreCase(
         Status status, IncidentPriority priority, String title, Pageable pageable);
     
@@ -48,7 +44,6 @@ public interface IncidentRepository extends JpaRepository<Incident, UUID> {
     Page<Incident> findByPriorityAndDescriptionContainingIgnoreCase(
         IncidentPriority priority, String description, Pageable pageable);
         
-    // Busca só por texto (título ou descrição)
     Page<Incident> findByTitleContainingIgnoreCase(String title, Pageable pageable);
     Page<Incident> findByDescriptionContainingIgnoreCase(String description, Pageable pageable);
 }

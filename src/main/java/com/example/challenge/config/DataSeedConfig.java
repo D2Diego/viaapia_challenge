@@ -16,7 +16,6 @@ import com.example.challenge.repository.IncidentRepository;
 import com.example.challenge.repository.RoleRepository;
 import com.example.challenge.repository.UsersRepository;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -45,22 +44,17 @@ public class DataSeedConfig implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        System.out.println("🌱 Iniciando seed de dados de demonstração...");
         
         createUsers();
         createDemoIncidents();
-        
-        System.out.println("✅ Seed de dados concluído com sucesso!");
     }
 
     private void createUsers() {
         var roleAdmin = roleRepository.findByName(Role.Values.ADMIN.name());
         var roleBasic = roleRepository.findByName(Role.Values.BASIC.name());
 
-        // Criar usuário admin
         createUserIfNotExists("admin", "123", Set.of(roleAdmin), "👤 Admin user");
         
-        // Criar usuários de demonstração
         createUserIfNotExists("analista", "123", Set.of(roleBasic), "👨‍💼 Analista user");
         createUserIfNotExists("tecnico", "123", Set.of(roleBasic), "🔧 Técnico user");
         createUserIfNotExists("suporte", "123", Set.of(roleBasic), "📞 Suporte user");
@@ -70,26 +64,22 @@ public class DataSeedConfig implements CommandLineRunner {
         var existingUser = userRepository.findByUsername(username);
         
         existingUser.ifPresentOrElse(
-            user -> System.out.println("   ↪ " + username + " já existe"),
+            user -> {},
             () -> {
                 var user = new User();
                 user.setUsername(username);
                 user.setPassword(passwordEncoder.encode(password));
                 user.setRoles(roles);
                 userRepository.save(user);
-                System.out.println("   ✅ " + description + " criado com sucesso");
             }
         );
     }
 
     private void createDemoIncidents() {
-        // Verificar se já existem incidents para evitar duplicação
         if (incidentRepository.count() > 0) {
-            System.out.println("   ↪ Incidents de demonstração já existem");
             return;
         }
 
-        System.out.println("🎯 Criando incidents de demonstração...");
 
         List<Incident> demoIncidents = Arrays.asList(
             createIncident(
@@ -150,11 +140,8 @@ public class DataSeedConfig implements CommandLineRunner {
             )
         );
 
-        // Salvar todos os incidents
         List<Incident> savedIncidents = incidentRepository.saveAll(demoIncidents);
-        System.out.println("   ✅ " + savedIncidents.size() + " incidents criados");
 
-        // Criar comentários para alguns incidents
         createDemoComments(savedIncidents);
     }
 
@@ -171,29 +158,22 @@ public class DataSeedConfig implements CommandLineRunner {
     }
 
     private void createDemoComments(List<Incident> incidents) {
-        System.out.println("💬 Criando comentários de demonstração...");
-        
         if (incidents.size() >= 3) {
-            // Comentários para o primeiro incident (servidor não responde)
             createComment(incidents.get(0).getId(), "admin", 
                 "Incident confirmado. Iniciando investigação dos logs do servidor.");
             createComment(incidents.get(0).getId(), "tecnico", 
                 "Verificando status dos serviços e memória disponível.");
             
-            // Comentários para o segundo incident (lentidão BD)
             createComment(incidents.get(1).getId(), "analista", 
                 "Analisando queries mais lentas no banco. Identificadas 3 consultas problemáticas.");
             createComment(incidents.get(1).getId(), "admin", 
                 "Necessário otimizar índices. Agendando manutenção para o final de semana.");
             
-            // Comentários para incident resolvido
             createComment(incidents.get(2).getId(), "tecnico", 
                 "Liberado espaço em disco e backup executado com sucesso.");
             createComment(incidents.get(2).getId(), "admin", 
                 "Incident resolvido. Implementando monitoramento para evitar recorrência.");
-        }
-        
-        System.out.println("   ✅ Comentários criados com sucesso");
+        }        
     }
 
     private void createComment(java.util.UUID incidentId, String author, String message) {

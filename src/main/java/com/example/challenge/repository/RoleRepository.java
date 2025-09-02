@@ -5,8 +5,6 @@ import org.springframework.stereotype.Repository;
 
 import com.example.challenge.entity.Role;
 
-import java.util.UUID;
-
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
     Role findByName(String name);

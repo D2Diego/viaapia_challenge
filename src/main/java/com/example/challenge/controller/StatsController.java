@@ -23,7 +23,6 @@ public class StatsController {
     @Autowired
     private IncidentRepository incidentRepository;
 
-    // DTO para estatísticas
     public static class IncidentStats {
         private Map<String, Long> byStatus;
         private Map<String, Long> byPriority;
@@ -59,9 +58,11 @@ public class StatsController {
         }
     }
 
-    /**
-     * GET /stats/incidents - Estatísticas agregadas por status e prioridade
-     */
+    @GetMapping
+    public ResponseEntity<IncidentStats> getStats() {
+        return getIncidentStats();
+    }
+    
     @GetMapping("/incidents")
     public ResponseEntity<IncidentStats> getIncidentStats() {
         try {
@@ -70,7 +71,6 @@ public class StatsController {
             IncidentStats stats = new IncidentStats();
             stats.setTotal((long) allIncidents.size());
             
-            // Agregar por status
             Map<String, Long> statusCounts = new HashMap<>();
             for (Status status : Status.values()) {
                 long count = allIncidents.stream()
@@ -80,7 +80,6 @@ public class StatsController {
             }
             stats.setByStatus(statusCounts);
             
-            // Agregar por prioridade
             Map<String, Long> priorityCounts = new HashMap<>();
             for (IncidentPriority priority : IncidentPriority.values()) {
                 long count = allIncidents.stream()

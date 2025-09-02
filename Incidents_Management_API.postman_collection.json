@@ -1,0 +1,793 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789012",
+		"name": "🎯 Incidents Management API",
+		"description": "Collection completa para testar a API de Gestão de Ocorrências\n\n## 🔐 **Autenticação**\nA API usa JWT Bearer Token. Faça login primeiro e o token será automaticamente aplicado.\n\n## 👤 **Usuários de Demonstração**\n- **admin** / **123** (ADMIN)\n- **analista** / **123** (BASIC)\n- **tecnico** / **123** (BASIC)\n- **suporte** / **123** (BASIC)\n\n## 🚀 **Como Usar**\n1. Execute \"🔑 Login\" primeiro\n2. O token JWT será salvo automaticamente\n3. Teste qualquer endpoint protegido\n\n## 📋 **Módulos Disponíveis**\n- 🔑 **Auth** - Autenticação\n- 👤 **Users** - Gestão de usuários\n- 📋 **Incidents** - Gestão de ocorrências\n- 💬 **Comments** - Sistema de comentários\n- 📊 **Stats** - Estatísticas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔑 Auth",
+			"item": [
+				{
+					"name": "🔑 Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Salva o token automaticamente para usar em outras requisições",
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.success && response.data.accessToken) {",
+									"        pm.environment.set('jwt_token', response.data.accessToken);",
+									"        console.log('✅ Token JWT salvo automaticamente!');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						},
+						"description": "Faz login e salva automaticamente o JWT token para usar em outras requisições.\n\n**Credenciais disponíveis:**\n- admin/123 (ADMIN)\n- analista/123 (BASIC)\n- tecnico/123 (BASIC)\n- suporte/123 (BASIC)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticação"
+		},
+		{
+			"name": "👤 Users",
+			"item": [
+				{
+					"name": "👤 Criar Usuário (Público)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"novouser\",\n  \"password\": \"senha123\",\n  \"roleNames\": [\"BASIC\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "Cria um novo usuário. Este endpoint é **público** (não precisa de autenticação).\n\n**Roles disponíveis:**\n- ADMIN\n- BASIC"
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Listar Usuários",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?page=0&size=10&sort=username,asc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Página (inicia em 0)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Itens por página"
+								},
+								{
+									"key": "sort",
+									"value": "username,asc",
+									"description": "Ordenação (campo,direção)"
+								}
+							]
+						},
+						"description": "Lista usuários com paginação e ordenação.\n\n**Parâmetros:**\n- `page`: Número da página (inicia em 0)\n- `size`: Itens por página\n- `sort`: Ordenação (ex: username,asc)"
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Buscar Usuário por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Busca um usuário específico pelo ID.\n\n**Substitua {{user_id}} pelo UUID do usuário.**"
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Buscar por Username",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/search?username=admin",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"search"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "admin"
+								}
+							]
+						},
+						"description": "Busca usuário pelo username."
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Atualizar Usuário",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin_updated\",\n  \"password\": \"nova_senha123\",\n  \"roleNames\": [\"ADMIN\", \"BASIC\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Atualiza um usuário existente.\n\n**Substitua {{user_id}} pelo UUID do usuário.**"
+					},
+					"response": []
+				},
+				{
+					"name": "👤 Deletar Usuário",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/{{user_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"{{user_id}}"
+							]
+						},
+						"description": "Remove um usuário.\n\n**Substitua {{user_id}} pelo UUID do usuário.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestão de usuários"
+		},
+		{
+			"name": "📋 Incidents",
+			"item": [
+				{
+					"name": "📋 Criar Incident",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Servidor não responde\",\n  \"description\": \"O servidor de produção parou de responder às requisições HTTP desde as 14:30. Usuários reportando erro 500.\",\n  \"priority\": \"HIGH\",\n  \"status\": \"OPEN\",\n  \"responsibleEmail\": \"admin@empresa.com\",\n  \"tags\": [\"servidor\", \"produção\", \"urgente\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/incidents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents"
+							]
+						},
+						"description": "Cria um novo incident.\n\n**Status disponíveis:** OPEN, IN_PROGRESS, RESOLVED, CLOSED\n**Prioridades:** LOW, MEDIUM, HIGH, CRITICAL"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Listar Incidents (com filtros)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/incidents?page=0&size=10&sort=createdAt,desc&status=OPEN&priority=HIGH&q=servidor",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Página (inicia em 0)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Itens por página"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt,desc",
+									"description": "Ordenação"
+								},
+								{
+									"key": "status",
+									"value": "OPEN",
+									"description": "Filtro por status"
+								},
+								{
+									"key": "priority",
+									"value": "HIGH",
+									"description": "Filtro por prioridade"
+								},
+								{
+									"key": "q",
+									"value": "servidor",
+									"description": "Busca no título e descrição"
+								}
+							]
+						},
+						"description": "Lista incidents com filtros avançados, paginação e ordenação.\n\n**Filtros disponíveis:**\n- `status`: OPEN, IN_PROGRESS, RESOLVED, CLOSED\n- `priority`: LOW, MEDIUM, HIGH, CRITICAL\n- `q`: Busca no título e descrição\n\n**Ordenação:**\n- `sort=createdAt,desc` (mais recentes primeiro)\n- `sort=priority,asc` (por prioridade)\n- `sort=title,asc` (alfabética)"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Buscar Incident por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}"
+							]
+						},
+						"description": "Busca um incident específico pelo ID.\n\n**Substitua {{incident_id}} pelo UUID do incident.**"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Atualizar Incident",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Servidor não responde - ATUALIZADO\",\n  \"description\": \"Problema identificado: sobrecarga de memória. Reiniciando servidor.\",\n  \"priority\": \"CRITICAL\",\n  \"status\": \"IN_PROGRESS\",\n  \"responsibleEmail\": \"admin@empresa.com\",\n  \"tags\": [\"servidor\", \"produção\", \"resolvendo\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}"
+							]
+						},
+						"description": "Atualiza um incident existente.\n\n**Substitua {{incident_id}} pelo UUID do incident.**"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Atualizar Status do Incident",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"RESOLVED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}",
+								"status"
+							]
+						},
+						"description": "Atualiza apenas o status de um incident.\n\n**Status disponíveis:** OPEN, IN_PROGRESS, RESOLVED, CLOSED"
+					},
+					"response": []
+				},
+				{
+					"name": "📋 Deletar Incident",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}"
+							]
+						},
+						"description": "Remove um incident.\n\n**Substitua {{incident_id}} pelo UUID do incident.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Gestão de incidents (ocorrências)"
+		},
+		{
+			"name": "💬 Comments",
+			"item": [
+				{
+					"name": "💬 Criar Comentário",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"author\": \"João Silva\",\n  \"message\": \"Estou investigando o problema. Parece ser um issue de conectividade com o banco de dados.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}/comments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}",
+								"comments"
+							]
+						},
+						"description": "Adiciona um comentário a um incident.\n\n**Substitua {{incident_id}} pelo UUID do incident.**"
+					},
+					"response": []
+				},
+				{
+					"name": "💬 Listar Comentários do Incident",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}/comments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}",
+								"comments"
+							]
+						},
+						"description": "Lista todos os comentários de um incident.\n\n**Substitua {{incident_id}} pelo UUID do incident.**"
+					},
+					"response": []
+				},
+				{
+					"name": "💬 Contar Comentários",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/incidents/{{incident_id}}/comments/count",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"incidents",
+								"{{incident_id}}",
+								"comments",
+								"count"
+							]
+						},
+						"description": "Retorna o número total de comentários de um incident."
+					},
+					"response": []
+				},
+				{
+					"name": "💬 Buscar Comentário por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/comments/{{comment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"comments",
+								"{{comment_id}}"
+							]
+						},
+						"description": "Busca um comentário específico pelo ID.\n\n**Substitua {{comment_id}} pelo UUID do comentário.**"
+					},
+					"response": []
+				},
+				{
+					"name": "💬 Atualizar Comentário",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"author\": \"João Silva\",\n  \"message\": \"ATUALIZAÇÃO: Problema resolvido! Era mesmo conectividade com o banco. Reiniciei o pool de conexões.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/comments/{{comment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"comments",
+								"{{comment_id}}"
+							]
+						},
+						"description": "Atualiza um comentário existente.\n\n**Substitua {{comment_id}} pelo UUID do comentário.**"
+					},
+					"response": []
+				},
+				{
+					"name": "💬 Deletar Comentário",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/comments/{{comment_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"comments",
+								"{{comment_id}}"
+							]
+						},
+						"description": "Remove um comentário.\n\n**Substitua {{comment_id}} pelo UUID do comentário.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Sistema de comentários para incidents"
+		},
+		{
+			"name": "📊 Stats",
+			"item": [
+				{
+					"name": "📊 Estatísticas Gerais",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwt_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stats"
+							]
+						},
+						"description": "Retorna estatísticas agregadas do sistema:\n- Total de incidents\n- Incidents por status\n- Incidents por prioridade\n- Médias e contadores"
+					},
+					"response": []
+				}
+			],
+			"description": "Estatísticas e relatórios"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script executado antes de cada requisição",
+					"console.log('🚀 Executando requisição para: ' + pm.request.url);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script executado após cada requisição",
+					"console.log('✅ Resposta recebida: ' + pm.response.status + ' - ' + pm.response.statusText);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+} 

@@ -12,5 +12,7 @@ import com.example.challenge.entity.Comment;
 public interface CommentRepository extends JpaRepository<Comment, UUID> {
     
     List<Comment> findByIncidentIdOrderByCreatedAtAsc(UUID incidentId);
+    
+    long countByIncidentId(UUID incidentId);
 }
  
