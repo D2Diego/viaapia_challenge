@@ -1,0 +1,185 @@
+<mat-toolbar color="primary">
+  <span>
+    <mat-icon>dashboard</mat-icon>
+    Dashboard
+  </span>
+  <span class="spacer"></span>
+  <span *ngIf="currentUser" class="text-sm font-medium">Welcome, {{currentUser.username}}</span>
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="navigateToIncidents()">
+      <mat-icon>list</mat-icon>
+      <span>All Incidents</span>
+    </button>
+    <button mat-menu-item (click)="navigateToNewIncident()">
+      <mat-icon>add</mat-icon>
+      <span>New Incident</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<div class="dashboard-container animate-fade-in">
+  <div class="welcome-section animate-slide-up">
+    <h1>Incident Management Dashboard</h1>
+    <p>Monitor and manage all incidents in your system with real-time insights and powerful analytics</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container animate-fade-in">
+    <mat-spinner></mat-spinner>
+    <p>Loading dashboard data...</p>
+  </div>
+
+  <div *ngIf="!isLoading && stats" class="stats-grid">
+    <mat-card class="stat-card total-card animate-slide-up" (click)="navigateToIncidents()">
+      <mat-card-content>
+        <div class="stat-header">
+          <mat-icon class="stat-icon">assessment</mat-icon>
+          <span class="stat-label">Total Incidents</span>
+        </div>
+        <div class="stat-value">{{stats.totalIncidents}}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card 
+      class="stat-card status-card status-open animate-slide-up" 
+      (click)="navigateToIncidents('OPEN')"
+      style="animation-delay: 0.1s"
+    >
+      <mat-card-content>
+        <div class="stat-header">
+          <mat-icon class="stat-icon" [style.color]="getStatusColor('open')">
+            {{getStatusIcon('open')}}
+          </mat-icon>
+          <span class="stat-label">Open</span>
+        </div>
+        <div class="stat-value">{{stats.openIncidents}}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card 
+      class="stat-card status-card status-in-progress animate-slide-up" 
+      (click)="navigateToIncidents('IN_PROGRESS')"
+      style="animation-delay: 0.2s"
+    >
+      <mat-card-content>
+        <div class="stat-header">
+          <mat-icon class="stat-icon" [style.color]="getStatusColor('in_progress')">
+            {{getStatusIcon('in_progress')}}
+          </mat-icon>
+          <span class="stat-label">In Progress</span>
+        </div>
+        <div class="stat-value">{{stats.inProgressIncidents}}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card 
+      class="stat-card status-card status-resolved animate-slide-up" 
+      (click)="navigateToIncidents('RESOLVED')"
+      style="animation-delay: 0.3s"
+    >
+      <mat-card-content>
+        <div class="stat-header">
+          <mat-icon class="stat-icon" [style.color]="getStatusColor('resolved')">
+            {{getStatusIcon('resolved')}}
+          </mat-icon>
+          <span class="stat-label">Resolved</span>
+        </div>
+        <div class="stat-value">{{stats.resolvedIncidents}}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card 
+      class="stat-card status-card status-cancelled animate-slide-up" 
+      (click)="navigateToIncidents('CANCELLED')"
+      style="animation-delay: 0.4s"
+    >
+      <mat-card-content>
+        <div class="stat-header">
+          <mat-icon class="stat-icon" [style.color]="getStatusColor('cancelled')">
+            {{getStatusIcon('cancelled')}}
+          </mat-icon>
+          <span class="stat-label">Cancelled</span>
+        </div>
+        <div class="stat-value">{{stats.cancelledIncidents}}</div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card priority-card animate-slide-up" style="animation-delay: 0.5s">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_up</mat-icon>
+          Priority Distribution
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="priority-stats">
+          <div class="priority-item">
+            <mat-icon [style.color]="getPriorityColor('high')">
+              {{getPriorityIcon('high')}}
+            </mat-icon>
+            <span class="priority-label">High</span>
+            <span class="priority-value">{{stats.highPriorityIncidents}}</span>
+          </div>
+          <div class="priority-item">
+            <mat-icon [style.color]="getPriorityColor('medium')">
+              {{getPriorityIcon('medium')}}
+            </mat-icon>
+            <span class="priority-label">Medium</span>
+            <span class="priority-value">{{stats.mediumPriorityIncidents}}</span>
+          </div>
+          <div class="priority-item">
+            <mat-icon [style.color]="getPriorityColor('low')">
+              {{getPriorityIcon('low')}}
+            </mat-icon>
+            <span class="priority-label">Low</span>
+            <span class="priority-value">{{stats.lowPriorityIncidents}}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="action-section animate-slide-up" style="animation-delay: 0.6s">
+    <h2>
+      <mat-icon>bolt</mat-icon>
+      Quick Actions
+    </h2>
+    <div class="action-buttons">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="navigateToNewIncident()"
+        class="action-button gradient-primary"
+      >
+        <mat-icon>add_circle</mat-icon>
+        Create New Incident
+      </button>
+      
+      <button 
+        mat-raised-button 
+        color="accent" 
+        (click)="navigateToIncidents()"
+        class="action-button"
+      >
+        <mat-icon>view_list</mat-icon>
+        View All Incidents
+      </button>
+      
+      <button 
+        mat-raised-button 
+        (click)="loadDashboardData()"
+        class="action-button"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh Data
+      </button>
+    </div>
+  </div>
+</div> 

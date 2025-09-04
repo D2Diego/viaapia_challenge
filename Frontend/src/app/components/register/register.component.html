@@ -1,0 +1,181 @@
+<div class="register-container">
+  <mat-card class="register-card animate-slide-up">
+    <mat-card-header class="register-header">
+      <mat-card-title>
+        <mat-icon class="register-icon">person_add</mat-icon>
+        <span>Create Account</span>
+      </mat-card-title>
+      <mat-card-subtitle>
+        Join the Incident Management System
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Username</mat-label>
+          <input
+            matInput
+            type="text"
+            formControlName="username"
+            placeholder="Choose a unique username"
+            autocomplete="username"
+            [class.mat-input-invalid]="username?.invalid && username?.touched"
+          >
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-hint>Minimum 3 characters required</mat-hint>
+          <mat-error *ngIf="username?.hasError('required')">
+            Username is required
+          </mat-error>
+          <mat-error *ngIf="username?.hasError('minlength')">
+            Username must be at least 3 characters
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="Choose a secure password"
+            autocomplete="new-password"
+            [class.mat-input-invalid]="password?.invalid && password?.touched"
+          >
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
+            matTooltip="{{hidePassword ? 'Show password' : 'Hide password'}}"
+          >
+            <mat-icon>{{hidePassword ? 'visibility' : 'visibility_off'}}</mat-icon>
+          </button>
+          <mat-hint>Minimum 3 characters required</mat-hint>
+          <mat-error *ngIf="password?.hasError('required')">
+            Password is required
+          </mat-error>
+          <mat-error *ngIf="password?.hasError('minlength')">
+            Password must be at least 3 characters
+          </mat-error>
+        </mat-form-field>
+
+        <div class="password-strength" *ngIf="password?.value">
+          <div class="strength-label">
+            Password Strength: 
+            <span [ngClass]="'strength-' + getPasswordStrength().color">
+              {{getPasswordStrength().strength}}
+            </span>
+          </div>
+          <div class="strength-bar">
+            <div 
+              class="strength-fill" 
+              [ngClass]="'fill-' + getPasswordStrength().color"
+              [style.width]="getPasswordStrength().width">
+            </div>
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Confirm Password</mat-label>
+          <input
+            matInput
+            [type]="hideConfirmPassword ? 'password' : 'text'"
+            formControlName="confirmPassword"
+            placeholder="Confirm your password"
+            autocomplete="new-password"
+            [class.mat-input-invalid]="confirmPassword?.invalid && confirmPassword?.touched"
+          >
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="hideConfirmPassword ? 'Show password' : 'Hide password'"
+            matTooltip="{{hideConfirmPassword ? 'Show password' : 'Hide password'}}"
+          >
+            <mat-icon>{{hideConfirmPassword ? 'visibility' : 'visibility_off'}}</mat-icon>
+          </button>
+          <mat-hint>Must match the password above</mat-hint>
+          <mat-error *ngIf="confirmPassword?.hasError('required')">
+            Please confirm your password
+          </mat-error>
+          <mat-error *ngIf="confirmPassword?.hasError('passwordMismatch')">
+            Passwords do not match
+          </mat-error>
+        </mat-form-field>
+
+        <div class="terms-section">
+          <mat-checkbox 
+            formControlName="acceptTerms"
+            color="primary"
+            class="terms-checkbox"
+          >
+            I agree to the 
+            <button mat-button color="primary" type="button" class="terms-link">
+              Terms and Conditions
+            </button>
+          </mat-checkbox>
+          <mat-error *ngIf="acceptTermsControl?.hasError('required') && acceptTermsControl?.touched">
+            You must accept the terms and conditions
+          </mat-error>
+        </div>
+
+        <mat-card class="registration-tips animate-fade-in" appearance="outlined" style="animation-delay: 0.3s">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>tips_and_updates</mat-icon>
+              Registration Tips
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="tips-list">
+              <div class="tip-item">
+                <mat-icon color="accent">check_circle</mat-icon>
+                <span>Choose a unique username</span>
+              </div>
+              <div class="tip-item">
+                <mat-icon color="accent">check_circle</mat-icon>
+                <span>Use a strong password with mixed characters</span>
+              </div>
+              <div class="tip-item">
+                <mat-icon color="accent">check_circle</mat-icon>
+                <span>Your account will be created instantly</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-divider class="form-divider"></mat-divider>
+
+        <div class="button-container animate-fade-in" style="animation-delay: 0.4s">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="isLoading"
+            class="full-width register-button"
+            matRipple
+          >
+            <mat-spinner *ngIf="isLoading" diameter="20" class="button-spinner"></mat-spinner>
+            <mat-icon *ngIf="!isLoading">person_add</mat-icon>
+            <span *ngIf="!isLoading">Create Account</span>
+            <span *ngIf="isLoading">Creating Account...</span>
+          </button>
+
+          <button
+            mat-button
+            type="button"
+            (click)="goToLogin()"
+            class="full-width login-button"
+            matRipple
+          >
+            <mat-icon>login</mat-icon>
+            Already have an account? Sign in here
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div> 

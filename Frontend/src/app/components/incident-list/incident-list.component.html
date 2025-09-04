@@ -1,0 +1,180 @@
+<mat-toolbar color="primary">
+  <button mat-icon-button (click)="goToDashboard()">
+    <mat-icon>dashboard</mat-icon>
+  </button>
+  <span>Incidents</span>
+  <span class="spacer"></span>
+  <button mat-raised-button color="accent" (click)="navigateToNewIncident()">
+    <mat-icon>add</mat-icon>
+    New Incident
+  </button>
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="goToDashboard()">
+      <mat-icon>dashboard</mat-icon>
+      <span>Dashboard</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      <span>Logout</span>
+    </button>
+  </mat-menu>
+</mat-toolbar>
+
+<div class="list-container">
+  <!-- Filters Section -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" class="filters-form">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search</mat-label>
+          <input matInput formControlName="q" placeholder="Search by title or description...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="">All Statuses</mat-option>
+            <mat-option *ngFor="let status of statusOptions" [value]="status">
+              {{status.replace('_', ' ')}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Priority</mat-label>
+          <mat-select formControlName="priority">
+            <mat-option value="">All Priorities</mat-option>
+            <mat-option *ngFor="let priority of priorityOptions" [value]="priority">
+              {{priority}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sort By</mat-label>
+          <mat-select formControlName="sort">
+            <mat-option value="createdAt,desc">Newest First</mat-option>
+            <mat-option value="createdAt,asc">Oldest First</mat-option>
+            <mat-option value="title,asc">Title A-Z</mat-option>
+            <mat-option value="title,desc">Title Z-A</mat-option>
+            <mat-option value="priority,desc">Priority High-Low</mat-option>
+            <mat-option value="priority,asc">Priority Low-High</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-button (click)="clearFilters()" class="clear-filters-btn">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Results Info -->
+  <div class="results-info" *ngIf="!isLoading && pageResponse">
+    <span class="results-count">
+      Showing {{pageResponse.numberOfElements}} of {{pageResponse.totalElements}} incidents
+    </span>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading incidents...</p>
+  </div>
+
+  <!-- Incidents List -->
+  <div *ngIf="!isLoading" class="incidents-grid">
+    <mat-card 
+      *ngFor="let incident of incidents" 
+      class="incident-card"
+      (click)="navigateToIncident(incident)"
+    >
+      <mat-card-header>
+        <mat-card-title class="incident-title">{{incident.title}}</mat-card-title>
+        <mat-card-subtitle>
+          {{incident.createdAt | dateFormatter:'medium'}}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="incident-meta">
+          <div class="status-priority">
+            <mat-chip [style.background-color]="getStatusColor(incident.status)" class="status-chip">
+              <mat-icon>{{getStatusIcon(incident.status)}}</mat-icon>
+              {{incident.status.replace('_', ' ')}}
+            </mat-chip>
+            
+            <mat-chip [style.background-color]="getPriorityColor(incident.priority)" class="priority-chip">
+              {{incident.priority}}
+            </mat-chip>
+          </div>
+
+          <div class="responsible">
+            <mat-icon>person</mat-icon>
+            <span>{{incident.responsibleEmail}}</span>
+          </div>
+        </div>
+
+        <p *ngIf="incident.description" class="incident-description">
+          {{incident.description.length > 150 ? (incident.description.substring(0, 150) + '...') : incident.description}}
+        </p>
+
+        <div class="tags-container" *ngIf="incident.tags && incident.tags.length > 0">
+          <mat-chip 
+            *ngFor="let tag of incident.tags.slice(0, 3)" 
+            class="incident-tag"
+          >
+            {{tag}}
+          </mat-chip>
+          <span *ngIf="incident.tags.length > 3" class="more-tags">
+            <mat-icon>more_horiz</mat-icon>
+            +{{incident.tags.length - 3}} more
+          </span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button (click)="navigateToIncident(incident)">
+          <mat-icon>visibility</mat-icon>
+          View Details
+        </button>
+        <button mat-button (click)="navigateToEdit(incident, $event)">
+          <mat-icon>edit</mat-icon>
+          Edit
+        </button>
+        <button mat-button color="warn" (click)="deleteIncident(incident, $event)">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <!-- No Results State -->
+    <div *ngIf="incidents.length === 0" class="no-results">
+      <mat-icon>assignment</mat-icon>
+      <h3>No incidents found</h3>
+      <p>Try adjusting your filters or create a new incident.</p>
+      <button mat-raised-button color="primary" (click)="navigateToNewIncident()">
+        <mat-icon>add</mat-icon>
+        Create New Incident
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <mat-paginator 
+    *ngIf="!isLoading && pageResponse && pageResponse.totalElements > 0"
+    [length]="totalElements"
+    [pageSize]="pageSize"
+    [pageIndex]="currentPage"
+    [pageSizeOptions]="[5, 10, 25, 50]"
+    (page)="onPageChange($event)"
+    showFirstLastButtons>
+  </mat-paginator>
+</div> 
