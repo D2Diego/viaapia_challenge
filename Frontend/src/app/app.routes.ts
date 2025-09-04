@@ -43,6 +43,11 @@ export const routes: Routes = [
     ]
   },
   {
+    path: 'users',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/user-management/user-management.component').then(c => c.UserManagementComponent)
+  },
+  {
     path: '**',
     redirectTo: '/dashboard'
   }

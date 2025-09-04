@@ -13,7 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDividerModule } from '@angular/material/divider';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -22,6 +22,8 @@ import { AuthService } from '../../services/auth.service';
 import { Incident, IncidentFilters, IncidentStatus, IncidentPriority } from '../../models/incident.model';
 import { PageResponse } from '../../models/api-response.model';
 import { DateFormatterPipe } from '../../utils/date-formatter.pipe';
+import { IncidentDisplayService } from '../../utils/incident-display.service';
+import { FilterService, FilterState } from '../../utils/filter.service';
 
 @Component({
   selector: 'app-incident-list',
@@ -40,7 +42,6 @@ import { DateFormatterPipe } from '../../utils/date-formatter.pipe';
     MatPaginatorModule,
     MatChipsModule,
     MatMenuModule,
-    MatDividerModule,
     DateFormatterPipe
   ],
   templateUrl: './incident-list.component.html',
@@ -52,14 +53,14 @@ export class IncidentListComponent implements OnInit {
   isLoading = true;
   filterForm: FormGroup;
   
-  // Enum values for templates
   statusOptions = Object.values(IncidentStatus);
   priorityOptions = Object.values(IncidentPriority);
   
-  // Pagination
   pageSize = 10;
   currentPage = 0;
   totalElements = 0;
+  
+
 
   constructor(
     private fb: FormBuilder,
@@ -67,30 +68,24 @@ export class IncidentListComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private displayService: IncidentDisplayService,
+    private filterService: FilterService
   ) {
-    this.filterForm = this.fb.group({
-      q: [''],
-      status: [''],
-      priority: [''],
-      sort: ['createdAt,desc']
-    });
+    this.filterForm = this.fb.group(this.filterService.getDefaultFilters());
   }
 
   ngOnInit(): void {
-    // Initialize filters from query params
     this.route.queryParams.subscribe(params => {
-      if (params['status']) this.filterForm.patchValue({ status: params['status'] });
-      if (params['priority']) this.filterForm.patchValue({ priority: params['priority'] });
-      if (params['q']) this.filterForm.patchValue({ q: params['q'] });
-      if (params['page']) this.currentPage = parseInt(params['page']);
-      if (params['size']) this.pageSize = parseInt(params['size']);
+      const { filters, page, size } = this.filterService.parseRouteParams(params);
+      this.filterForm.patchValue(filters);
+      this.currentPage = page;
+      this.pageSize = size;
       
       this.loadIncidents();
     });
 
-    // Setup search debounce
-    this.filterForm.get('q')?.valueChanges
+    this.filterForm.valueChanges
       .pipe(
         debounceTime(300),
         distinctUntilChanged()
@@ -99,27 +94,13 @@ export class IncidentListComponent implements OnInit {
         this.currentPage = 0;
         this.loadIncidents();
       });
-
-    // Setup other filter changes
-    this.filterForm.get('status')?.valueChanges.subscribe(() => {
-      this.currentPage = 0;
-      this.loadIncidents();
-    });
-
-    this.filterForm.get('priority')?.valueChanges.subscribe(() => {
-      this.currentPage = 0;
-      this.loadIncidents();
-    });
-
-    this.filterForm.get('sort')?.valueChanges.subscribe(() => {
-      this.loadIncidents();
-    });
   }
 
   loadIncidents(): void {
     this.isLoading = true;
     
-    const filters = this.buildQueryParams();
+    const filterState = this.filterService.normalizeFilterFormValue(this.filterForm.value);
+    const filters = this.filterService.buildQueryParams(filterState, this.currentPage, this.pageSize);
     
     this.incidentService.getIncidents(filters).subscribe({
       next: (response) => {
@@ -128,7 +109,6 @@ export class IncidentListComponent implements OnInit {
         this.totalElements = response.totalElements;
         this.isLoading = false;
         
-        // Update URL with current filters
         this.updateUrl(filters);
       },
       error: (error) => {
@@ -139,18 +119,7 @@ export class IncidentListComponent implements OnInit {
     });
   }
 
-  // Build query params from form and pagination (DRY principle)
-  buildQueryParams(): IncidentFilters {
-    const formValue = this.filterForm.value;
-    return {
-      q: formValue.q?.trim() || undefined,
-      status: formValue.status || undefined,
-      priority: formValue.priority || undefined,
-      sort: formValue.sort || 'createdAt,desc',
-      page: this.currentPage,
-      size: this.pageSize
-    };
-  }
+
 
   onPageChange(event: PageEvent): void {
     this.currentPage = event.pageIndex;
@@ -159,12 +128,8 @@ export class IncidentListComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filterForm.reset({
-      q: '',
-      status: '',
-      priority: '',
-      sort: 'createdAt,desc'
-    });
+    const defaultFilters = this.filterService.getDefaultFilters();
+    this.filterForm.reset(defaultFilters);
     this.currentPage = 0;
     this.loadIncidents();
   }
@@ -209,42 +174,27 @@ export class IncidentListComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
-    switch (status) {
-      case 'OPEN': return '#f44336';
-      case 'IN_PROGRESS': return '#ff9800';
-      case 'RESOLVED': return '#4caf50';
-      case 'CANCELLED': return '#9e9e9e';
-      default: return '#2196f3';
-    }
+    return this.displayService.getStatusColor(status);
   }
 
   getPriorityColor(priority: string): string {
-    switch (priority) {
-      case 'HIGH': return '#f44336';
-      case 'MEDIUM': return '#ff9800';
-      case 'LOW': return '#4caf50';
-      default: return '#2196f3';
-    }
+    return this.displayService.getPriorityColor(priority);
   }
 
   getStatusIcon(status: string): string {
-    switch (status) {
-      case 'OPEN': return 'error_outline';
-      case 'IN_PROGRESS': return 'hourglass_empty';
-      case 'RESOLVED': return 'check_circle_outline';
-      case 'CANCELLED': return 'cancel';
-      default: return 'help_outline';
-    }
+    return this.displayService.getStatusIcon(status);
+  }
+
+  getStatusDisplayName(status: string): string {
+    return this.displayService.getStatusDisplayName(status);
+  }
+
+  getPriorityDisplayName(priority: string): string {
+    return this.displayService.getPriorityDisplayName(priority);
   }
 
   private updateUrl(filters: IncidentFilters): void {
-    const queryParams: any = {};
-    
-    if (filters.status) queryParams.status = filters.status;
-    if (filters.priority) queryParams.priority = filters.priority;
-    if (filters.q) queryParams.q = filters.q;
-    if (filters.page && filters.page > 0) queryParams.page = filters.page;
-    if (filters.size && filters.size !== 10) queryParams.size = filters.size;
+    const queryParams = this.filterService.createUrlParams(filters);
     
     this.router.navigate([], {
       relativeTo: this.route,
@@ -252,4 +202,38 @@ export class IncidentListComponent implements OnInit {
       queryParamsHandling: 'merge'
     });
   }
+
+  get sortOptions() {
+    return this.filterService.sortOptions;
+  }
+
+  hasActiveFilters(): boolean {
+    const filterState = this.filterService.normalizeFilterFormValue(this.filterForm.value);
+    return this.filterService.hasActiveFilters(filterState);
+  }
+
+  getActiveFiltersCount(): number {
+    let count = 0;
+    const formValue = this.filterForm.value;
+    
+    if (formValue.q?.trim()) count++;
+    if (formValue.status) count++;
+    if (formValue.priority) count++;
+    
+    return count;
+  }
+
+  getSortIcon(field: string, direction: 'asc' | 'desc'): string {
+    const iconMap: { [key: string]: string } = {
+      createdAt: direction === 'desc' ? 'schedule' : 'schedule',
+      title: direction === 'desc' ? 'sort_by_alpha' : 'sort_by_alpha',
+      priority: direction === 'desc' ? 'priority_high' : 'priority_high',
+      status: direction === 'desc' ? 'swap_vert' : 'swap_vert',
+      updatedAt: direction === 'desc' ? 'update' : 'update'
+    };
+    
+    return iconMap[field] || 'sort';
+  }
+
+
 } 

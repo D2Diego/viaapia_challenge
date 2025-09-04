@@ -27,7 +27,6 @@ export class AuthService {
           this.setToken(response.accessToken);
           this.setTokenExpiration(response.expiresIn);
           this.isAuthenticatedSubject.next(true);
-          // Decode user info from token and set current user
           this.setCurrentUserFromToken(response.accessToken);
           console.log('Token stored, user authenticated');
         })

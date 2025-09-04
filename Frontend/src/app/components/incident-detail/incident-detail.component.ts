@@ -21,6 +21,7 @@ import { AuthService } from '../../services/auth.service';
 import { Incident, IncidentStatus, StatusUpdateDto } from '../../models/incident.model';
 import { Comment, CommentCreateDto } from '../../models/comment.model';
 import { DateFormatterPipe } from '../../utils/date-formatter.pipe';
+import { IncidentDisplayService } from '../../utils/incident-display.service';
 
 @Component({
   selector: 'app-incident-detail',
@@ -142,9 +143,9 @@ import { DateFormatterPipe } from '../../utils/date-formatter.pipe';
           <!-- Add Comment Form -->
           <form [formGroup]="commentForm" (ngSubmit)="addComment()" class="comment-form">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Author</mat-label>
-              <input matInput formControlName="author" placeholder="Your name">
-              <mat-error *ngIf="author?.hasError('required')">Author is required</mat-error>
+              <mat-label>Author (optional)</mat-label>
+              <input matInput formControlName="author" placeholder="Leave blank for anonymous">
+              <mat-hint>Leave empty to post anonymously</mat-hint>
             </mat-form-field>
             
             <mat-form-field appearance="outline" class="full-width">
@@ -155,7 +156,7 @@ import { DateFormatterPipe } from '../../utils/date-formatter.pipe';
             </mat-form-field>
             
             <button mat-raised-button color="primary" type="submit" 
-                    [disabled]="!commentForm.valid || isAddingComment">
+                    [disabled]="!message?.value?.trim() || isAddingComment">
               <mat-spinner *ngIf="isAddingComment" diameter="20"></mat-spinner>
               {{isAddingComment ? 'Adding...' : 'Add Comment'}}
             </button>
@@ -229,10 +230,11 @@ export class IncidentDetailComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private displayService: IncidentDisplayService
   ) {
     this.commentForm = this.fb.group({
-      author: ['', Validators.required],
+      author: [''],
       message: ['', [Validators.required, Validators.maxLength(2000)]]
     });
   }
@@ -282,10 +284,14 @@ export class IncidentDetailComponent implements OnInit {
   }
 
   addComment(): void {
-    if (this.commentForm.valid && !this.isAddingComment && this.incidentId) {
+    const messageValue = this.message?.value?.trim();
+    if (messageValue && !this.isAddingComment && this.incidentId) {
       this.isAddingComment = true;
       
-      const comment: CommentCreateDto = this.commentForm.value;
+              const comment: CommentCreateDto = {
+          author: this.author?.value?.trim() || 'Anonymous',
+          message: messageValue
+        };
       
       this.commentService.createComment(this.incidentId, comment).subscribe({
         next: (newComment) => {
@@ -348,32 +354,23 @@ export class IncidentDetailComponent implements OnInit {
   }
 
   getStatusColor(status: string): string {
-    switch (status) {
-      case 'OPEN': return '#f44336';
-      case 'IN_PROGRESS': return '#ff9800';
-      case 'RESOLVED': return '#4caf50';
-      case 'CANCELLED': return '#9e9e9e';
-      default: return '#2196f3';
-    }
+    return this.displayService.getStatusColor(status);
   }
 
   getPriorityColor(priority: string): string {
-    switch (priority) {
-      case 'HIGH': return '#f44336';
-      case 'MEDIUM': return '#ff9800';
-      case 'LOW': return '#4caf50';
-      default: return '#2196f3';
-    }
+    return this.displayService.getPriorityColor(priority);
   }
 
   getStatusIcon(status: string): string {
-    switch (status) {
-      case 'OPEN': return 'error_outline';
-      case 'IN_PROGRESS': return 'hourglass_empty';
-      case 'RESOLVED': return 'check_circle_outline';
-      case 'CANCELLED': return 'cancel';
-      default: return 'help_outline';
-    }
+    return this.displayService.getStatusIcon(status);
+  }
+
+  getStatusDisplayName(status: string): string {
+    return this.displayService.getStatusDisplayName(status);
+  }
+
+  getPriorityDisplayName(priority: string): string {
+    return this.displayService.getPriorityDisplayName(priority);
   }
 
   get author() { return this.commentForm.get('author'); }

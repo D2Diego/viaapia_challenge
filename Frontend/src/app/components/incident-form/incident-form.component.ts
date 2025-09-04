@@ -179,7 +179,6 @@ export class IncidentFormComponent implements OnInit {
       });
     }
 
-    // Handle tags input
     this.incidentForm.get('tagsInput')?.valueChanges.subscribe(value => {
       if (value && (value.includes(',') || value.includes(';'))) {
         this.addTag();

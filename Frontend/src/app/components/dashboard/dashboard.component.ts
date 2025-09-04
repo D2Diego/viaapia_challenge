@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { IncidentService } from '../../services/incident.service';
 import { AuthService } from '../../services/auth.service';
+import { IncidentDisplayService } from '../../utils/incident-display.service';
 import { StatsResponse } from '../../models/api-response.model';
 import { User } from '../../models/user.model';
 
@@ -40,7 +41,8 @@ export class DashboardComponent implements OnInit {
     private incidentService: IncidentService,
     private authService: AuthService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private displayService: IncidentDisplayService
   ) {}
 
   ngOnInit(): void {
@@ -75,46 +77,34 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/incidents/new']);
   }
 
+  navigateToUsers(): void {
+    this.router.navigate(['/users']);
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   getStatusIcon(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'open': return 'error_outline';
-      case 'in_progress': return 'hourglass_empty';
-      case 'resolved': return 'check_circle_outline';
-      case 'cancelled': return 'cancel';
-      default: return 'help_outline';
-    }
+    return this.displayService.getStatusIcon(status.toUpperCase());
   }
 
   getPriorityIcon(priority: string): string {
-    switch (priority.toLowerCase()) {
-      case 'high': return 'priority_high';
-      case 'medium': return 'remove';
-      case 'low': return 'expand_more';
+    const priorityUpper = priority.toUpperCase();
+    switch (priorityUpper) {
+      case 'HIGH': return 'priority_high';
+      case 'MEDIUM': return 'remove';
+      case 'LOW': return 'expand_more';
       default: return 'help_outline';
     }
   }
 
   getStatusColor(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'open': return '#f44336';
-      case 'in_progress': return '#ff9800';
-      case 'resolved': return '#4caf50';
-      case 'cancelled': return '#9e9e9e';
-      default: return '#2196f3';
-    }
+    return this.displayService.getStatusColor(status.toUpperCase());
   }
 
   getPriorityColor(priority: string): string {
-    switch (priority.toLowerCase()) {
-      case 'high': return '#f44336';
-      case 'medium': return '#ff9800';
-      case 'low': return '#4caf50';
-      default: return '#2196f3';
-    }
+    return this.displayService.getPriorityColor(priority.toUpperCase());
   }
 } 
