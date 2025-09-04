@@ -97,6 +97,10 @@ export class IncidentListComponent implements OnInit {
   }
 
   loadIncidents(): void {
+    this.loadIncidentsWithUrlUpdate();
+  }
+
+  private loadIncidentsWithUrlUpdate(): void {
     this.isLoading = true;
     
     const filterState = this.filterService.normalizeFilterFormValue(this.filterForm.value);
@@ -119,12 +123,34 @@ export class IncidentListComponent implements OnInit {
     });
   }
 
+  private loadIncidentsWithoutUrlUpdate(): void {
+    this.isLoading = true;
+    
+    const filterState = this.filterService.normalizeFilterFormValue(this.filterForm.value);
+    const filters = this.filterService.buildQueryParams(filterState, this.currentPage, this.pageSize);
+    
+    this.incidentService.getIncidents(filters).subscribe({
+      next: (response) => {
+        this.pageResponse = response;
+        this.incidents = response.content;
+        this.totalElements = response.totalElements;
+        this.isLoading = false;
+        
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.snackBar.open('Failed to load incidents', 'Close', { duration: 5000 });
+        console.error('Load incidents error:', error);
+      }
+    });
+  }
+
 
 
   onPageChange(event: PageEvent): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.loadIncidents();
+    this.loadIncidentsWithoutUrlUpdate();
   }
 
   clearFilters(): void {
@@ -203,6 +229,8 @@ export class IncidentListComponent implements OnInit {
     });
   }
 
+
+
   get sortOptions() {
     return this.filterService.sortOptions;
   }
@@ -235,5 +263,8 @@ export class IncidentListComponent implements OnInit {
     return iconMap[field] || 'sort';
   }
 
+  isAdmin(): boolean {
+    return this.authService.hasRole('ADMIN');
+  }
 
 } 

@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -88,6 +89,7 @@ public class IncidentController {
 
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteIncident(@PathVariable UUID id) {
         incidentService.deleteIncident(id);
         ApiResponse<Void> response = ApiResponse.success("Incident deleted successfully", null);
